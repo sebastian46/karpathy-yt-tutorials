@@ -37,6 +37,8 @@ class BasicTokenizer():
         regex = re.compile(regex)
         tokens = re.findall(regex, text)
         ids = [list(ch.encode("utf-8")) for ch in tokens]
+        print(ids[:10])
+        print(self.decode(ids[:1][0]))
 
         # tokens = text.encode("utf-8") # raw bytes
         # tokens =  list(map(int,tokens)) # convert to a list of integers in range 0..255 for convenience
@@ -82,6 +84,6 @@ with open('taylorswift.txt', 'r', encoding='utf-8') as file:
     text = file.read()
 GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+"""
 basicTokenizer = BasicTokenizer()
-basicTokenizer.train(text, 300, GPT4_SPLIT_PATTERN, True)
+basicTokenizer.train(text, 300, GPT4_SPLIT_PATTERN, False)
 for (p0, p1), idx in basicTokenizer.merges.items():
     print(f"[{basicTokenizer.decode([p0])}] [{basicTokenizer.decode([p1])}] => {idx}")
