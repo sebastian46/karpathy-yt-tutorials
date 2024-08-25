@@ -41,6 +41,9 @@ def tokenize(doc):
 def write_datafile(filename, tokens_np):
     np.save(filename, tokens_np)
 
+# Add a counter for total tokens processed
+total_tokens = 0  # Initialize total tokens counter
+
 # tokenize all documents and write output shards, each of shard_size tokens (last shard has remainder)
 nprocs = max(1, os.cpu_count()//2)
 with mp.Pool(nprocs) as pool:
@@ -50,6 +53,12 @@ with mp.Pool(nprocs) as pool:
     token_count = 0
     progress_bar = None
     for tokens in pool.imap(tokenize, fw, chunksize=16):
+        # Update the total token count
+        total_tokens += len(tokens)
+
+        # Break if we've processed 2.5B tokens
+        if total_tokens >= 2.5e9:
+            break
 
         # is there enough space in the current shard for the new tokens?
         if token_count + len(tokens) < shard_size:
@@ -76,7 +85,8 @@ with mp.Pool(nprocs) as pool:
             token_count = len(tokens)-remainder
 
     # write any remaining tokens as the last shard
-    if token_count != 0:
+    if token_count != 0 and total_tokens < 2.5e9:
         split = "val" if shard_index == 0 else "train"
         filename = os.path.join(DATA_CACHE_DIR, f"edufineweb_{split}_{shard_index:06d}")
         write_datafile(filename, all_tokens_np[:token_count])
+print(f"Processed {total_tokens} tokens.")

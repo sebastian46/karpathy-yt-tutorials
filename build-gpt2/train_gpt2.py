@@ -367,10 +367,11 @@ if ddp: # wrap model in ddp container
     model = DDP(model, device_ids=[ddp_local_rank])
 raw_model = model.module if ddp else model # always contains the "raw" unwrapped model
 
-max_lr = 6e-4
+max_lr = 6e-4 * 2 # Try larger learning rates
 min_lr = max_lr * 0.1
-warmup_steps = 715 # gpt warmup is 375m tokens. 375m / 2**19 = 715
+warmup_steps = 100 # 715 # gpt warmup is 375m tokens. 375m / 2**19 = 715
 max_steps = 19073 # 19,073 steps is ~1 epoch, if data is 10B tokens and batch size 0.5M tokens (max_steps = 19073 # 2^10 tokens / 2**19 = 19073.48)
+# note: I am training for 4 epochs using 2.5B tokens instead-- nicer number for this model size (124M)
 def get_lr(it):
     # 1) linear warmup for warmup_iters steps
     if it < warmup_steps:
